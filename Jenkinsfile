@@ -76,8 +76,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    chown -R 1000:1000 /var/jenkins_home/workspace/learn-jenkins-app
-                    npm install netlify-cli
+                    npm install netlify-cli@20.1.1 --unsafe-perm
                     node_modules/.bin/netlify --version
                     echo "Deploy to production side ID: $NETLIFY_SIDE_ID"
                     node_modules/.bin/netlify status
