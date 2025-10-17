@@ -72,11 +72,12 @@ pipeline {
                 docker{
                     image 'node:18-alpine'
                     reuseNode true
+                    args '-u root:root'
                 }
             }
             steps {
                 sh '''
-                    npm install netlify-cli@20.1.1 --unsafe-perm
+                    npm install netlify-cli 
                     node_modules/.bin/netlify --version
                     echo "Deploy to production side ID: $NETLIFY_SIDE_ID"
                     node_modules/.bin/netlify status
