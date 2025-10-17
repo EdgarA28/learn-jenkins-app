@@ -3,6 +3,7 @@ pipeline {
 
     environment{
         NETLYFY_SIDE_ID = '35d32d05-e100-42be-8528-f6df5c0da6c8'
+        NETLIFY_AUTH_TOKEN = credential('netlify-token')
     }
 
     stages {
@@ -60,21 +61,22 @@ pipeline {
             }
         }
 
-        // stage('Deploy') {
-        //     agent {
-        //         docker{
-        //             image 'node:18-alpine'
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         sh '''
-        //             npm install netlify-cli
-        //             node_modules/.bin/netlify --version
-        //             echo "Deploy to production side ID: $NETLIFY_SIDE_ID"
-        //         '''
-        //     }
-        // }
+        stage('Deploy') {
+            agent {
+                docker{
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    npm install netlify-cli@20.1.1
+                    node_modules/.bin/netlify --version
+                    echo "Deploy to production side ID: $NETLIFY_SIDE_ID"
+                    node_modules/.bin/netlify status
+                '''
+            }
+        }
     }
     post {
         // sucess{
