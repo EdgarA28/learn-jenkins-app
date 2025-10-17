@@ -76,6 +76,7 @@ pipeline {
             }
             steps {
                 sh '''
+                    sudo chown -R $(whoami) /var/jenkins_home/workspace/learn-jenkins-app
                     npm install netlify-cli
                     node_modules/.bin/netlify --version
                     echo "Deploy to production side ID: $NETLIFY_SIDE_ID"
