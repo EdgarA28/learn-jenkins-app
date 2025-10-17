@@ -35,7 +35,8 @@ pipeline {
             steps{
                 sh '''
                     npm install serve
-                    node_modules/.bin/serve -s build
+                    node_modules/.bin/serve -s build & 
+                    sleep 10
                     npx playwright test
                    '''
             }
@@ -61,7 +62,7 @@ pipeline {
         //     archiveArtifacts artifacts: 'build/**'
         // }
         always{
-            cleanWs()
+            junit 'jest-result/junit.xml'
         }
     }
 
