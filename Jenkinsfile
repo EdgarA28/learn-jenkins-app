@@ -54,5 +54,14 @@ pipeline {
             }
         }
     }
+    post {
+        // sucess{
+        //     archiveArtifacts artifacts: 'build/**'
+        // }
+        always{
+            cleanWs()
+        }
+    }
+
 
 }
