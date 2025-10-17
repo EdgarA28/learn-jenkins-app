@@ -35,9 +35,5 @@ pipeline {
             }
         }
     }
-    post{
-            always{
-                junit 'test-result/junix.xml'
-            }
-        }
+
 }
