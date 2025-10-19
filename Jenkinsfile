@@ -14,6 +14,7 @@ pipeline {
                 sh 'docker build -t my-playwright .'
             }
         }
+
         stage('Build') {
             agent {
                 docker{
@@ -26,7 +27,6 @@ pipeline {
                     ls -la
                     node --version
                     npm --version
-                    npm ci
                     npm run build
                     ls -la
                 '''
