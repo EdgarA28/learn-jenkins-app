@@ -87,7 +87,7 @@ pipeline {
         }
         stage{
             steps{
-                timeout(time: 20, unit: 'SECONDS') {
+                timeout(time: 25, unit: 'SECONDS') {
                     input message: 'Ready to deploy', ok: 'yes, i am sure'
                 }
                 
