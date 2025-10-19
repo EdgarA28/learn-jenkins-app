@@ -85,6 +85,15 @@ pipeline {
                 '''
             }
         }
+        stage{
+            steps{
+                timeout(time: 20, unit: 'SECONDS') {
+                    input message: 'Ready to deploy', ok: 'yes, i am sure'
+                }
+                
+            }
+
+        }
         stage('Deploy prod') {
             agent {
                 docker{
