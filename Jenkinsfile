@@ -88,7 +88,6 @@ pipeline {
 
             steps{
                 sh '''
-                    netlify-cli node-jq
                     netlify --version   
                     echo "Deploying to staging Site ID: $NETLIFY_SITE_ID "
                     netlify status
