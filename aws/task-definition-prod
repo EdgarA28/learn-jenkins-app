@@ -9,7 +9,7 @@
             "image": "nginx:1.27-alpine",
             "portMappings": [
                 {
-                    "name": "nginx:-80-tip",
+                    "name": "nginx-80-tip",
                     "containerPort": 80,
                     "hostPort": 80,
                     "protocol": "tcp",
