@@ -31,6 +31,13 @@ pipeline {
         //     }
         // }
         stage('Build Docker image'){
+            agent{
+                docker{
+                    image 'my-aws-cli'
+                    reuseNode true
+                    args "-u root --entrypoint=''"
+                }
+            }
             steps{
                 sh '''
                     docker build -t $APP_NAME:$REACT_APP_VERSION .
