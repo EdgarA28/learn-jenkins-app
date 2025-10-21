@@ -32,7 +32,7 @@ pipeline {
         stage('Build Docker image'){
             steps{
                 sh '''
-                    docker build -t $APP_NAME:$REACT_APP_VERSION
+                    docker build -t $APP_NAME:$REACT_APP_VERSION .
                 '''
             }
         }
