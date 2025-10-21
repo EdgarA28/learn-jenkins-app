@@ -45,9 +45,10 @@ pipeline {
                     aws ecr get-login-password --region us-east-1 | \
                     docker login\
                     --username AWS \
-                    --password-stdin\
-                     $AWS_DOCKER_REGISTRY
-                     docker push $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION
+                    --password-stdin $AWS_DOCKER_REGISTRY
+                     docker tag $APP_NAME:$REACT_APP_VERSION \
+                     AWS_DOCKER_REGISTRY/learnjenkinsapp:$REACT_APP_VERSION
+                     docker push $AWS_DOCKER_REGISTRY/learnjenkinsapp:$REACT_APP_VERSION
                 '''
                 }
             }
