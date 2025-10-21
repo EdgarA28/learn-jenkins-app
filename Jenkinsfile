@@ -39,6 +39,7 @@ pipeline {
                 }
             }
             steps{
+                withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                 sh '''
                     docker build -t $APP_NAME:$REACT_APP_VERSION .
                     aws ecr get-login-password --region us-east-1 | \
@@ -48,6 +49,7 @@ pipeline {
                      $AWS_DOCKER_REGISTRY
                     docker push $AWS_DOCKER_REGISTRY/$APP_NAME:$REACT_APP_VERSION
                 '''
+                }
             }
         }
         stage('Deploy AWS'){
