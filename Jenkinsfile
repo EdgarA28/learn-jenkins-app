@@ -28,148 +28,168 @@ pipeline {
                 '''
             }
         }
-        stage('AWS'){
+        stage('Build Docker image'){
+            agent {
+                docker{
+                    image 'my-aws-cli'
+                    reuseNode true
+                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock -entrypoint=''"
+                }
+            }
+            steps{
+                sh '''
+                    amazon-linux-extras install docker
+                    docker build -t myjenkinsapp .
+                '''
+            }
+        }
+        stage('Deploy AWS'){
             agent{
                 docker{
-                    image 'amazon/aws-cli'
+                    image 'my-aws-cli'
                     reuseNode true
-                    args "--entrypoint=''"
+                    args "-u root --entrypoint=''"
                 }
             }
             environment{
                 AWS_S3_BUCKET = 'learn-jenkins-bucket-28071993'
                 AWS_DEFAULT_REGION ='us-east-1'
+                AWS_ECS_CLUSTER = 'JenkinsApp-Cluster-Prod'
+                AWS_ECS_SERVICE_PROD = 'LearnJenkinsApp-Service-Prod'
+                AWS_ECS_TD = 'LearnJenkinsApp-TaskDefinition-Prod'
             }
             steps{
                     withCredentials([usernamePassword(credentialsId: 'my-aws', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
                     sh '''
                      aws --version 
-                     aws s3 ls
+                     yum install jq -y
                      #aws s3 sync build s3://$AWS_S3_BUCKET
-                     aws ecs register-task-definition --cli-input-json file://aws/task-definition-prod
-
+                     LATEST_REVISION=$(aws ecs register-task-definition --cli-input-json file://aws/$task-definition-prod.json | jq '.taskDefinition.revision')
+                     echo $LATEST_REVISION
+                     aws ecs update-service --cluster $AWS_ECS_CLUSTER --service $AWS_ECS_SERVICE_PROD --task-definition $AWS_ECS_TD:$LATEST_REVISION
+                     aws ecs wait services-stable --cluster $AWS_ECS_CLUSTER --services $AWS_ECS_SERVICE_PROD 
                     '''
                 }
            
             }
         }
-        stage('Tests'){
-            parallel{
-                    stage('Unit tests'){
-                        agent{
-                            docker{
-                                image 'node:18-alpine'
-                                reuseNode true
-                            }
-                        }
-                        steps {
-                            sh '''
-                            #test -f build/index.html
-                            npm test
-                            '''
-                        }
-                    }
+    //     stage('Tests'){
+    //         parallel{
+    //                 stage('Unit tests'){
+    //                     agent{
+    //                         docker{
+    //                             image 'node:18-alpine'
+    //                             reuseNode true
+    //                         }
+    //                     }
+    //                     steps {
+    //                         sh '''
+    //                         #test -f build/index.html
+    //                         npm test
+    //                         '''
+    //                     }
+    //                 }
                     
-                    stage('E2E'){
-                        agent {
-                            docker{
-                            image 'my-playwright'
-                            reuseNode true
-                            args '-u root:root'
-                                }
-                        }
-                        steps{
-                            sh '''
+    //                 stage('E2E'){
+    //                     agent {
+    //                         docker{
+    //                         image 'my-playwright'
+    //                         reuseNode true
+    //                         args '-u root:root'
+    //                             }
+    //                     }
+    //                     steps{
+    //                         sh '''
               
-                                serve -s build & 
-                                sleep 10
-                                npx playwright test --reporter=html
-                            '''
-                        }
-                        post {
-                        always{
-                            junit 'jest-results/junit.xml'
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Report local', reportTitles: '', useWrapperFileDirectly: true])
-                        }
-                    }
-                }
-            }
-        }
+    //                             serve -s build & 
+    //                             sleep 10
+    //                             npx playwright test --reporter=html
+    //                         '''
+    //                     }
+    //                     post {
+    //                     always{
+    //                         junit 'jest-results/junit.xml'
+    //                         publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Report local', reportTitles: '', useWrapperFileDirectly: true])
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
 
 
-        stage('Deploy Staging'){
-            agent {
-                docker{
-                image 'my-playwright'
-                reuseNode true
-                args '-u root:root'
-                }
-            }
-            environment{
-            CI_ENVIRONMENT_URL = "STAGING_URL_TO_BE_SET"
-             }
+    //     stage('Deploy Staging'){
+    //         agent {
+    //             docker{
+    //             image 'my-playwright'
+    //             reuseNode true
+    //             args '-u root:root'
+    //             }
+    //         }
+    //         environment{
+    //         CI_ENVIRONMENT_URL = "STAGING_URL_TO_BE_SET"
+    //          }
 
-            steps{
-                sh '''
-                    netlify --version   
-                    echo "Deploying to staging Site ID: $NETLIFY_SITE_ID "
-                    netlify status
-                    netlify deploy --dir=build --json > deploy-output.json
-                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
-                    npx playwright test --reporter=html
-                '''
-            }
-            post {
-            always{
-                junit 'jest-results/junit.xml'
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Staging E2E Report', reportTitles: '', useWrapperFileDirectly: true])
-            }
-        }
-    }
+    //         steps{
+    //             sh '''
+    //                 netlify --version   
+    //                 echo "Deploying to staging Site ID: $NETLIFY_SITE_ID "
+    //                 netlify status
+    //                 netlify deploy --dir=build --json > deploy-output.json
+    //                 CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json)
+    //                 npx playwright test --reporter=html
+    //             '''
+    //         }
+    //         post {
+    //         always{
+    //             junit 'jest-results/junit.xml'
+    //             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML Staging E2E Report', reportTitles: '', useWrapperFileDirectly: true])
+    //         }
+    //     }
+    // }
 
 
 
-        // stage('Approval'){
-        //     steps{
-        //         timeout(time: 25, unit: 'SECONDS') {
-        //             input message: 'Ready to deploy', ok: 'yes, i am sure'
-        //         }
+    //     // stage('Approval'){
+    //     //     steps{
+    //     //         timeout(time: 25, unit: 'SECONDS') {
+    //     //             input message: 'Ready to deploy', ok: 'yes, i am sure'
+    //     //         }
                 
-        //     }
+    //     //     }
 
-        // }
+    //     // }
 
-        stage('Deploy Prod'){
-            agent {
-                docker{
-                image 'my-playwright'
-                reuseNode true
-                args '-u root:root'
-                    }
-            }
-            environment{
-            CI_ENVIRONMENT_URL = 'https://melodic-kitsune-a5af75.netlify.app'
-        }
+    //     stage('Deploy Prod'){
+    //         agent {
+    //             docker{
+    //             image 'my-playwright'
+    //             reuseNode true
+    //             args '-u root:root'
+    //             }
+    //         }
+    //         environment{
+    //         CI_ENVIRONMENT_URL = 'https://melodic-kitsune-a5af75.netlify.app'
+    //         }
 
-            steps{
-                sh '''
+    //         steps{
+    //             sh '''
 
-                    netlify --version   
-                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID "
-                    netlify status
-                    netlify deploy --dir=build --prod
-                    npx playwright test --reporter=html
-                '''
-            }
-            post {
-            always{
-                junit 'jest-results/junit.xml'
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML E2E Report', reportTitles: '', useWrapperFileDirectly: true])
-            }
-        }
-    }
+    //                 netlify --version   
+    //                 echo "Deploying to production. Site ID: $NETLIFY_SITE_ID "
+    //                 netlify status
+    //                 netlify deploy --dir=build --prod
+    //                 npx playwright test --reporter=html
+    //             '''
+    //         }
+    //         post {
+    //         always{
+    //             junit 'jest-results/junit.xml'
+    //             publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'HTML E2E Report', reportTitles: '', useWrapperFileDirectly: true])
+    //         }
+    //     }
+    // }
 
-    }
+     }
 
 
 
