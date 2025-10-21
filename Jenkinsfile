@@ -30,17 +30,11 @@ pipeline {
         //     }
         // }
         stage('Build Docker image'){
-            agent {
-                docker{
-                    image 'my-aws-cli'
-                    reuseNode true
-                    args "-u root -v /var/run/docker.sock:/var/run/docker.sock -entrypoint=''"
-                }
-            }
+            agent any
+
             steps{
                 sh '''
-                    amazon-linux-extras install docker
-                    docker build -t $APP_NAME:$REACT_APP_VERSION.
+                    docker build -t $APP_NAME:$REACT_APP_VERSION
                 '''
             }
         }
