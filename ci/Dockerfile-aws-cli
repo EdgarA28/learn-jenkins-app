@@ -1,4 +1,25 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2
 
-RUN amazon-linux-extras install docker
-RUN yum install jq -y
+# Update and Install dependencies needed for AWS CLI v2 (like 'unzip')
+# and 'jq'
+RUN yum update -y && \
+    yum install -y unzip jq
+
+# Install AWS CLI v2
+# 1. Download the AWS CLI v2 bundle
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    # 2. Unzip the package
+    unzip awscliv2.zip && \
+    # 3. Run the installer
+    ./aws/install && \
+    # 4. Clean up the downloaded files to keep the image small
+    rm -rf awscliv2.zip aws
+
+# Install the Docker client using amazon-linux-extras
+# Note: You are installing the Docker *client*. You cannot run the full Docker daemon inside a container easily.
+RUN amazon-linux-extras install docker -y
+
+# Optional: Verify installations
+RUN aws --version
+RUN jq --version
+RUN docker --version
