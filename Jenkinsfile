@@ -47,7 +47,7 @@ pipeline {
                     --username AWS \
                     --password-stdin $AWS_DOCKER_REGISTRY
                      docker tag $APP_NAME:$REACT_APP_VERSION \
-                     AWS_DOCKER_REGISTRY/learnjenkinsapp:$REACT_APP_VERSION
+                     $AWS_DOCKER_REGISTRY/learnjenkinsapp:$REACT_APP_VERSION
                      docker push $AWS_DOCKER_REGISTRY/learnjenkinsapp:$REACT_APP_VERSION
                 '''
                 }
