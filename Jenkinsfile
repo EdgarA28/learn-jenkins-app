@@ -30,8 +30,6 @@ pipeline {
         //     }
         // }
         stage('Build Docker image'){
-            agent any
-
             steps{
                 sh '''
                     docker build -t $APP_NAME:$REACT_APP_VERSION
