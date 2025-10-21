@@ -1,3 +1,5 @@
 FROM amazon/aws-cli
-RUN amazon-linux-extras install docker
-RUN yum install jq -y
+
+# Update package list and install Docker client and jq using Alpine's apk
+RUN apk update && \
+    apk add --no-cache docker jq
